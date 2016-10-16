@@ -130,18 +130,18 @@ function desktop:init(args)
 	--------------------------------------------------------------------------------
 	local thermal = { geometry = wgeometry(grid, places.thermal, workarea) }
 
-	thermal.args = {
-		sensors = {
-			{ meter_function = system.thermal.sensors, args = "'Physical id 0'", maxm = 100, crit = 75 },
-      -- { meter_function = system.thermal.hddtemp, args = {disk = "/dev/sda"}, maxm = 60, crit = 45 },
-      -- { meter_function = system.thermal.hddtemp, args = {disk = "/dev/sdc"}, maxm = 60, crit = 45 },
-			{ meter_function = system.thermal.nvoptimus, maxm = 105, crit = 80 }
-		},
-    names   = {"cpu", "gpu"},
-		timeout = 5
-	}
-
-	thermal.style = {
+  thermal.args = {
+    sensors = {
+      { meter_function = system.thermal.sensors_core, args = {index = 0, main = true}, maxm = 100, crit = 75 },
+      { meter_function = system.thermal.sensors_core, args = {index = 1}, maxm = 100, crit = 75 },
+      { meter_function = system.thermal.sensors_core, args = {index = 2}, maxm = 100, crit = 75 },
+      { meter_function = system.thermal.sensors_core, args = {index = 3}, maxm = 100, crit = 75 },
+      { meter_function = system.thermal.nvoptimus, maxm = 105, crit = 80 }
+    },
+    names   = {"core1","core2","core3","core4","gpu"},
+    timeout = 5
+  }
+  thermal.style = {
 		unit      = { { "°C", -1 } },
 		show_text = true
 	}
