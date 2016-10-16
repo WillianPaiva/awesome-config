@@ -10,15 +10,15 @@ local redflat = require("redflat")
 -- Layouts setup
 -----------------------------------------------------------------------------------------------------------------------
 local layouts = {
-	awful.layout.suit.floating,
-	redflat.layout.grid,
-	lain.layout.uselesstile,
+  redflat.layout.map,
+  lain.layout.uselesstile,
 	lain.layout.uselesstile.left,
 	lain.layout.uselesstile.bottom,
 	lain.layout.uselessfair,
-	redflat.layout.map,
-	awful.layout.suit.max,
+  awful.layout.suit.max,
 	awful.layout.suit.max.fullscreen,
+  awful.layout.suit.floating,
+  redflat.layout.grid,
 
 	--awful.layout.suit.fair,
 	--awful.layout.suit.tile,

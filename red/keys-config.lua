@@ -20,9 +20,10 @@ local tagsel = awful.tag.selected
 local exaile = redflat.float.exaile
 local redbar = redflat.titlebar
 
+local gui_editor = "emacsclient -nc -s /tmp/emacs1000/server "
 -- key functions
 local br = function(args)
-	redflat.float.brightness:change_with_gsd(args)
+	redflat.float.brightness:change(args)
 end
 
 local focus_switch_byd = function(dir)
@@ -30,6 +31,13 @@ local focus_switch_byd = function(dir)
 		awful.client.focus.bydirection(dir)
 		if client.focus then client.focus:raise() end
 	end
+end
+
+local focus_screen_byd = function(dir)
+  return function()
+    awful.screen.focus_bydirection(dir)
+    if client.focus then client.focus:raise() end
+  end
 end
 
 local focus_previous = function()
@@ -114,14 +122,14 @@ end
 -- custom widget keys
 redflat.float.appswitcher.keys.next  = { "a", "A", "Tab" }
 redflat.float.appswitcher.keys.prev  = { "q", "Q", }
-redflat.float.appswitcher.keys.close = { "Super_L", "Return", "Escape" }
+redflat.float.appswitcher.keys.close = { "Super_L" }
 
 -- layout keys
 local resize_keys = {
-	resize_up    = { "i", "I", },
-	resize_down  = { "k", "K", },
-	resize_left  = { "j", "J", },
-	resize_right = { "l", "L", },
+  resize_up    = { "k", "K", },
+  resize_down  = { "j", "J", },
+  resize_left  = { "h", "H", },
+  resize_right = { "l", "L", },
 }
 
 redflat.layout.common.keys = redflat.util.table.merge(redflat.layout.common.keys, resize_keys)
@@ -129,33 +137,17 @@ redflat.layout.grid.keys = redflat.util.table.merge(redflat.layout.grid.keys, re
 redflat.layout.map.keys = redflat.util.table.merge(redflat.layout.map.keys, resize_keys)
 redflat.layout.map.keys = redflat.util.table.merge(redflat.layout.map.keys, { last = { "p", "P" } })
 
--- quick launcher settings
-local launcher_keys = {}
-for i = 1, 9 do launcher_keys["#" .. tostring(i + 9)] = { app = "", run = "" } end
-local launcher_style = { service_hotkeys = { close = { "Escape" }, switch = { "Return" }} }
 
 -- Build hotkeys depended on config parameters
 -----------------------------------------------------------------------------------------------------------------------
 function hotkeys:init(args)
 
-	-- init vars
 	local args = args or {}
 	self.menu = args.menu or redflat.menu({ items = { {"Empty menu"} } })
 	self.terminal = args.terminal or "x-terminal-emulator"
 	self.mod = args.mod or "Mod4"
-	self.qmod = args.qmod or "Mod1"
 	self.need_helper = args.need_helper or true
 	self.layouts = args.layouts
-
-	-- quick launcher settings
-	local launcher_settings = {
-		keys = launcher_keys,
-		switchmod = { self.mod, self.qmod            },
-		setupmod  = { self.mod, self.qmod, "Control" },
-		runmod    = { self.mod, self.qmod, "Shift"   }
-	}
-
-	redflat.float.qlaunch:init(launcher_settings, launcher_style)
 
 	-- Global keys
 	--------------------------------------------------------------------------------
@@ -179,121 +171,129 @@ function hotkeys:init(args)
 			comment = "Focus right client"
 		},
 		{
-			args = { { self.mod,           }, "j", focus_switch_byd("left"), },
+      args = { { self.mod,           }, "h", focus_switch_byd("left"), },
 			comment = "Focus left client"
 		},
 		{
-			args = { { self.mod,           }, "i", focus_switch_byd("up"), },
+      args = { { self.mod,           }, "k", focus_switch_byd("up"), },
 			comment = "Focus client above"
 		},
 		{
-			args = { { self.mod,           }, "k", focus_switch_byd("down"), },
+      args = { { self.mod,           }, "j", focus_switch_byd("down"), },
 			comment = "Focus client below"
 		},
-		{
-			args = { { self.mod,           }, "u", awful.client.urgent.jumpto, },
-			comment = "Focus first urgent client"
-		},
-		{
-			args = { { self.mod,           }, "Tab", focus_previous, },
-			comment = "Return to previously focused client"
-		},
+    {
+      args = { { self.mod, "Control" }, "h", focus_screen_byd("left"), },
+      comment = "Focus left screen"
+    },
+    {
+      args = { { self.mod, "Control" }, "l", focus_screen_byd("right"), },
+      comment = "Focus right screen"
+    },
+    -- {
+    -- 	args = { { self.mod,           }, "Tab", focus_previous, },
+    -- 	comment = "Return to previously focused client"
+    -- },
 		{ comment = "Tag navigation" },
 		{
-			args = { { self.mod,         }, "Left", awful.tag.viewprev },
+      args = { { self.mod,  }, "Left", awful.tag.viewprev },
 			comment = "View previous tag"
 		},
 		{
-			args = { { self.mod,         }, "Right", awful.tag.viewnext },
+      args = { { self.mod, }, "Right", awful.tag.viewnext },
 			comment = "View next tag"
 		},
-		{
-			args = { { self.mod,           }, "Escape", awful.tag.history.restore },
-			comment = "View previously selected tag set"
-		},
+
+    -- 	args = { { self.mod,           }, "Escape", awful.tag.history.restore },
+    -- 	comment = "View previously selected tag set"
+    -- },
 		{ comment = "Widgets" },
 		{
 			args = { { self.mod,           }, "x", function() redflat.float.top:show() end },
 			comment = "Show top widget"
 		},
-		{
-			args = { { self.mod,           }, "w", function() hotkeys.menu:toggle() end },
-			comment = "Open main menu"
-		},
-		{
-			args = { { self.mod, self.qmod }, "w", function() redflat.float.qlaunch:show() end },
-			comment = "Show quick launch widget"
-		},
+    -- {
+    -- 	args = { { self.mod,           }, "w", function() hotkeys.menu:toggle() end },
+    -- 	comment = "Open main menu"
+    -- },
 		{
 			args = { { self.mod,           }, "y", function () laybox:toggle_menu(tagsel(mouse.screen)) end },
 			comment = "Open layout menu"
 		},
-		{
-			args = { { self.mod            }, "p", function () redflat.float.prompt:run() end },
-			comment = "Run prompt"
-		},
-		{
-			args = { { self.mod            }, "r", function() redflat.float.apprunner:show() end },
-			comment = "Allication launcher"
-		},
+    -- {
+    -- 	args = { { self.mod            }, "p", function () redflat.float.prompt:run() end },
+    -- 	comment = "Run prompt"
+    -- },
+    {
+      args = { { self.mod            }, "p", function() awful.util.spawn("rofi -show run"  ) end },
+      comment = "Run Rofi"
+    },
+    -- {
+    -- 	args = { { self.mod            }, "r", function() redflat.float.apprunner:show() end },
+    -- 	comment = "Allication launcher"
+    -- },
 		{
 			args = { { self.mod, "Control" }, "i", function() redflat.widget.minitray:toggle() end },
 			comment = "Show minitray"
 		},
-		{
-			args = { { self.mod            }, "e", function() exaile:show() end },
-			comment = "Show exaile widget"
-		},
+    -- {
+    -- 	args = { { self.mod            }, "e", function() exaile:show() end },
+    -- 	comment = "Show exaile widget"
+    -- },
 		{
 			args = { { self.mod,           }, "F1", function() redflat.float.hotkeys:show() end },
 			comment = "Show hotkeys helper"
 		},
-		{
-			args = { { self.mod, "Control" }, "u", function () redflat.widget.upgrades:update(true) end },
-			comment = "Check available upgrades"
-		},
-		{
-			args = { { self.mod, "Control" }, "m", function () redflat.widget.mail:update() end },
-			comment = "Check new mail"
-		},
+    -- {
+    -- 	args = { { self.mod, "Control" }, "u", function () redflat.widget.upgrades:update(true) end },
+    -- 	comment = "Check available upgrades"
+    -- },
+    -- {
+    -- 	args = { { self.mod, "Control" }, "m", function () redflat.widget.mail:update() end },
+    -- 	comment = "Check new mail"
+    -- },
 		{ comment = "Application switcher" },
 		{
-			args = { { self.mod            }, "a", nil, function() sw:show({ filter = current }) end },
+      args = { { self.mod            }, "Tab", nil, function() sw:show({ filter = current }) end },
 			comment = "Switch to next with current tag"
 		},
 		{
-			args = { { self.mod            }, "q", nil, function() sw:show({ filter = current, reverse = true }) end },
-			comment = "Switch to previous with current tag"
-		},
+      args = { { self.mod            }, "q", function () awful.util.spawn( "uzbl-tabbed" , false ) end },
+      comment = "uzbl"
+    },
+    -- {
+    --   args = { { self.mod, "Shift"   }, "q", function () awful.util.spawn( "firefox -P 'Tor'" , false ) end },
+    --   comment = "Deprecatede"
+    -- },
+    {
+      args = { { self.mod,    }, "d", function () awful.util.spawn( "thunar" , false ) end },
+      comment = "Thunar"
+    },
+    {
+      args = { { self.mod,    }, "s", function () awful.util.spawn( gui_editor) end },
+      comment = "Emacs Client"
+    },
+    -- {
+    -- 	args = { { self.mod, "Shift"   }, "a", nil, function() sw:show({ filter = allscr }) end },
+    -- 	comment = "Switch to next through all tags"
+    -- },
+    -- {
+    -- 	args = { { self.mod, "Shift"   }, "q", nil, function() sw:show({ filter = allscr, reverse = true }) end },
+    -- 	comment = "Switch to previous through all tags"
+    -- },
+
+    { comment = "MPD" },
 		{
-			args = { { self.mod, "Shift"   }, "a", nil, function() sw:show({ filter = allscr }) end },
-			comment = "Switch to next through all tags"
-		},
-		{
-			args = { { self.mod, "Shift"   }, "q", nil, function() sw:show({ filter = allscr, reverse = true }) end },
-			comment = "Switch to previous through all tags"
-		},
-		{ comment = "Exaile music player" },
-		{
-			args = { {                     }, "XF86AudioPlay", function() exaile:action("PlayPause") end },
+      args = { {                     }, "XF86AudioPlay", function() awful.util.spawn("mpc toggle") end },
 			comment = "Play/Pause"
 		},
 		{
-			args = { {                     }, "XF86AudioNext", function() exaile:action("Next") end },
+      args = { {                     }, "XF86AudioNext", function() awful.util.spawn("mpc next") end },
 			comment = "Next track"
 		},
 		{
-			args = { {                     }, "XF86AudioPrev", function() exaile:action("Prev") end },
+      args = { {                     }, "XF86AudioPrev", function() awful.util.spawn("mpc prev") end },
 			comment = "Previous track"
-		},
-		{ comment = "Brightness control" },
-		{
-			args = { {                     }, "XF86MonBrightnessUp", function() br({ step = 1 }) end },
-			comment = "Increase brightness"
-		},
-		{
-			args = { {                     }, "XF86MonBrightnessDown", function() br({ step = 1, down = true }) end },
-			comment = "Reduce brightness"
 		},
 		{ comment = "Volume control" },
 		{
@@ -308,11 +308,24 @@ function hotkeys:init(args)
 			args = { { self.mod,            }, "v", volume_mute },
 			comment = "Toggle mute"
 		},
+		{ comment = "Brightness control" },
+		{
+			args = { {                     }, "XF86MonBrightnessUp", function() br({ step = 0 }) end },
+			comment = "Increase brightness"
+		},
+		{
+			args = { {                     }, "XF86MonBrightnessDown", function() br({ step = 0, down = 1 }) end },
+			comment = "Reduce brightness"
+		},
 		{ comment = "Window manipulation" },
 		{
-			args = { { self.mod,           }, "F3", toggle_placement },
-			comment = "Toggle master/slave placement"
-		},
+      args = { { self.mod,           }, "f3", toggle_placement },
+      comment = "toggle master/slave placement"
+    },
+    {
+      args = { { self.mod,           }, "o", awful.client.movetoscreen },
+      comment = "toggle master/slave placement"
+    },
 		{
 			args = { { self.mod, "Control" }, "Return", swap_with_master },
 			comment = "Swap focused client with master"
@@ -335,11 +348,11 @@ function hotkeys:init(args)
 		},
 		{ comment = "Layouts" },
 		{
-			args = { { self.mod,           }, "Up", function () awful.layout.inc(self.layouts, 1) end },
+      args = { { self.mod,           }, "space", function () awful.layout.inc(self.layouts, 1) end },
 			comment = "Switch to next layout"
 		},
 		{
-			args = { { self.mod,           }, "Down", function () awful.layout.inc(self.layouts, - 1) end },
+      args = { { self.mod, "Shift" }, "space", function () awful.layout.inc(self.layouts, - 1) end },
 			comment = "Switch to previous layout"
 		},
 		{ comment = "Titlebar" },
@@ -369,19 +382,19 @@ function hotkeys:init(args)
 		},
 		{ comment = "Tile control" },
 		{
-			args = { { self.mod, "Shift"   }, "j", function () awful.tag.incnmaster(1) end },
+      args = { { self.mod, "Shift"   }, "k", function () awful.tag.incnmaster(1) end },
 			comment = "Increase number of master windows by 1"
 		},
 		{
-			args = { { self.mod, "Shift"   }, "l", function () awful.tag.incnmaster(-1) end },
+      args = { { self.mod, "Shift"   }, "j", function () awful.tag.incnmaster(-1) end },
 			comment = "Decrease number of master windows by 1"
 		},
 		{
-			args = { { self.mod, "Control" }, "j", function () awful.tag.incncol(1) end },
+      args = { { self.mod, "Control" }, "k", function () awful.tag.incncol(1) end },
 			comment = "Increase number of non-master columns by 1"
 		},
 		{
-			args = { { self.mod, "Control" }, "l", function () awful.tag.incncol(-1) end },
+      args = { { self.mod, "Control" }, "j", function () awful.tag.incncol(-1) end },
 			comment = "Decrease number of non-master columns by 1"
 		}
 	}
@@ -394,20 +407,20 @@ function hotkeys:init(args)
 			args = { { self.mod,           }, "f", function (c) c.fullscreen = not c.fullscreen end },
 			comment = "Set client fullscreen"
 		},
+    -- {
+    -- 	args = { { self.mod,           }, "s", function (c) c.sticky = not c.sticky end },
+    -- 	comment = "Toogle client sticky status"
+    -- },
 		{
-			args = { { self.mod,           }, "s", function (c) c.sticky = not c.sticky end },
-			comment = "Toogle client sticky status"
-		},
-		{
-			args = { { self.mod,           }, "F4", function (c) c:kill() end },
+      args = { { self.mod, "Shift" }, "c", function (c) c:kill() end },
 			comment = "Kill focused client"
 		},
 		{
-			args = { { self.mod, "Control" }, "f", awful.client.floating.toggle },
+      args = { { self.mod, "Control" }, "space", awful.client.floating.toggle },
 			comment = "Toggle client floating status"
 		},
 		{
-			args = { { self.mod,           }, "o", function (c) c.ontop = not c.ontop end },
+			args = { { self.mod, "Control" }, "p", function (c) c.ontop = not c.ontop end },
 			comment = "Toggle client ontop status"
 		},
 		{
@@ -472,10 +485,16 @@ function hotkeys:init(args)
 		--awful.button({}, 5, awful.tag.viewprev)
 	)
 
+
+  -- clientbuttons = awful.util.table.join(
+  --   awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
+  --   awful.button({ modkey }, 1, awful.mouse.client.move),
+  --   awful.button({ modkey }, 3, awful.mouse.client.resize))
+
 	-- client
 	self.mouse.client = awful.util.table.join(
 		awful.button({                     }, 1, function (c) client.focus = c; c:raise() end),
-		awful.button({                     }, 2, redflat.service.mouse.move),
+    awful.button({ self.mod            }, 1, redflat.service.mouse.move),
 		awful.button({ self.mod            }, 3, redflat.service.mouse.resize),
 		awful.button({                     }, 8, function(c) c:kill() end),
 		awful.button({ self.mod            }, 4, function (c) minimize_all_else(c) end),
@@ -486,6 +505,7 @@ function hotkeys:init(args)
 		)
 	)
 
+
 	-- Hotkeys helper setup
 	--------------------------------------------------------------------------------
 	if self.need_helper then
@@ -495,9 +515,8 @@ function hotkeys:init(args)
 	self.client = redflat.util.table.join_raw(hotkeys.raw_client, awful.key)
 	self.global = redflat.util.table.join_raw(hotkeys.raw_global, awful.key)
 	self.global = awful.util.table.join(self.global, hotkeys.num)
-	self.global = awful.util.table.join(self.global, redflat.float.qlaunch.hotkeys)
 end
 
 -- End
------------------------------------------------------------------------------------------------------------------------
 return hotkeys
+-----------------------------------------------------------------------------------------------------------------------

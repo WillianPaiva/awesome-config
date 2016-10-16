@@ -23,7 +23,7 @@ function desktop:init(args)
 	local theme_path = args.tpath or "/usr/share/awesome/themes/default"
 
   -- placement
-	local grid = beautiful.desktop.grid
+	local grid = beautiful.desktop.grid2
 	local places = beautiful.desktop.places
 
 	-- Network speed
@@ -117,7 +117,7 @@ function desktop:init(args)
 			{ meter_function = system.fs_info, maxm = 100, crit = 80, args = "/" },
 			{ meter_function = system.fs_info, maxm = 100, crit = 80, args = "/home" },
     },
-    names   = {"root", "home"},
+    names   = {"root", "home" },
 		timeout = 300
 	}
 
@@ -143,7 +143,7 @@ function desktop:init(args)
 
 	thermal.style = {
 		unit      = { { "°C", -1 } },
-    show_text = true
+		show_text = true
 	}
 
 	-- Initialize all desktop widgets
@@ -156,8 +156,7 @@ function desktop:init(args)
 	transm.widget = redflat.desktop.multim(transm.args, transm.geometry, transm.style)
 
 	disks.widget   = redflat.desktop.dashpack(disks.args, disks.geometry, disks.style)
-  thermal.widget = redflat.desktop.dashpack(thermal.args, thermal.geometry, thermal.style)
-  -- thermal.widget = redflat.desktop.simpleline(thermal.args, thermal.geometry, thermal.style)
+	thermal.widget = redflat.desktop.dashpack(thermal.args, thermal.geometry, thermal.style)
 end
 
 -- End
